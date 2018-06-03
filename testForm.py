@@ -16,8 +16,8 @@ import PySide
 from time import sleep
 import logging 
 from config import constants
-from config import config
-from config.config import CONFIG_OPTIONS
+from config.confs import CONFIG_OPTIONS
+from config import confs
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
@@ -304,7 +304,7 @@ class AccessCode(QDialog):
             para["access_token"]=self.accessCode[0]
             print("para is {}".format(para))
             print("value of OPTIONS in submitAcode {}".format(self.options))
-            response = requests.post(config.VIEW_RULE_URL, data=json.dumps(para))
+            response = requests.post(confs.VIEW_RULE_URL, data=json.dumps(para))
             print("this is the value of response {}\n".format(response))
             jsonData=response.json()
             print("jasonData is {}".format(jsonData))
@@ -480,7 +480,7 @@ class MainWindow(QMainWindow ):
                 now = datetime.datetime.now()
                 performed_on=str(now.strftime("%a, %Y-%m-%d %H:%M:%S"))
                 activity['performed_on']=performed_on
-                resAct = requests.post(config.INSERT_ACCESS_URL, data=json.dumps(activity))
+                resAct = requests.post(confs.INSERT_ACCESS_URL, data=json.dumps(activity))
                 resActjson=resAct.json()
                 print("activity data is {}".format(activity))
                 print("jasonData is escape {}".format(resActjson))
