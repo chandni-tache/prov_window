@@ -1,0 +1,24 @@
+Restrictions:
+  application:
+  - {id: '10', value: calculator}
+  - {id: '9', value: notepad}
+  bookmarks:
+  - {id: '7', value: 'https://www.tutorialspoint.com/'}
+  - {id: '19', value: 'http://www.nyc.gov/html/tlc/html/home/home.shtml'}
+  - {id: '8', value: 'https://www.javatpoint.com/'}
+  control:
+  - {id: '11', value: escape}
+  - {id: '5', value: Ctrl+C}
+  - {id: '6', value: Alt}
+  port:
+  - {id: '4', value: '22'}
+  - {id: '3', value: '21'}
+  website:
+  - {id: '12', value: tachetechnologies.com}
+  - {id: '13', value: flipkart.com}
+  - {id: '1', value: www.facebook.com}
+  - {id: '2', value: www.provnow.com}
+access_id: 117
+rule_id: '3'
+rule_name: Rule Number 8
+status: success
