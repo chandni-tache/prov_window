@@ -4,42 +4,46 @@ This is the main script for Lock Down Browser, a kiosk-oriented web browser
 Written by Tache Technologies 
 
 """
-import pdb
-from PySide.QtGui import QLineEdit
-#import testFormMain  testFormVer_BColor
-#from testFormMain import Ui_MainWindow
-from testFormVer_BColor import Ui_MainWindow
-#from testFormVer_BColorStyle import Ui_MainWindow
-#from testFormVer_BColor3 import Ui_MainWindow
-from accessCodeForm import Ui_Dialog
-import PySide
 from time import sleep
-import logging 
-from config import constants
-from config.confs import CONFIG_OPTIONS
-from config import confs
+import logging
+# Standard library imports
+import tzlocal
+import platform
+import sys
+import os
+import argparse
+import yaml
+import json
+import psutil
+import requests
+from multiprocessing import Queue
+import urllib3
+import re
+import subprocess
+import datetime
+import site
+import time as Time
+import pdb
 
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
+from PySide import QtCore, QtGui, QtUiTools
+from PySide import QtUiTools
+from functools import partial
+from PySide import QtXml
+import pyHook 
 
-formatter = logging.Formatter('%(asctime)s:%(levelname)s:%(name)s:%(message)s')
+from PySide.QtGui import QLineEdit
+import PySide
 
-file_handler = logging.FileHandler('provLock.log')
-file_handler.setLevel(logging.DEBUG)
-file_handler.setFormatter(formatter)
+from accessCodeForm import Ui_Dialog
+from testFormVer_BColor import Ui_MainWindow
 
-appNum_handler = logging.FileHandler('ApplicationRuning.log','w')
-appNum_handler.setLevel(logging.ERROR)
-appNum_handler.setFormatter(formatter)
+from prov_utilities.config.confs import CONFIG_OPTIONS
+from prov_utilities.open_apps_detector import NumOfAppOpen
+from prov_utilities.com_resources import logger, formatter
+from prov_utilities.com_resources import file_handler, appNum_handler
+from prov_utilities.config import constants
+from prov_utilities.config import confs
 
-logger.addHandler(file_handler)
-logger.addHandler(appNum_handler)
-#from PySide.QtGui import QComboBox, QPushButton
-#import PySide
-# QT Binding imports
-#log.basicConfig(filename='provLock.log',level=log.DEBUG,format = "%(levelname)s:%(asctime)s:%(message)s")
-logger.debug("hello ravi i am in log")
-logger.error("hello this application is running")
 
 while True:
     # This is a little odd, but seemed cleaner than
@@ -121,30 +125,6 @@ while True:
         exit(1)
 
 
-# Standard library imports
-import tzlocal
-import platform
-import sys
-import os
-import argparse
-import yaml
-import json
-import psutil
-import requests
-from multiprocessing import Queue
-import urllib3
-import re
-import subprocess
-import datetime
-import site
-import time as Time
-
-from PySide import QtCore, QtGui, QtUiTools
-from PySide import QtUiTools
-from functools import partial
-from PySide import QtXml
-import pyHook 
-
 #i added these two line 
 print("hello this is QKeySequence.Copy\n")
 print(QKeySequence.Copy)
@@ -191,92 +171,31 @@ for k in para.keys():
     elif k =="timezone":
         para[k]=str(my_timezone)
         
-    
-class NumOfAppOpen(QMessageBox):
-    RESTRICTED_APPS = {'chrome','firefox','skype'}
-
-    def __init__(self,parent=None):
-        super(NumOfAppOpen,self).__init__(parent)
-        
-    def process_exists(self):
-        open_apps = set()
-        logger.error('in thread {} is This:'.format(self.__class__) )
-        logger.error("hello i am in thread Run Function")
-        for proc in psutil.process_iter():
-            try:
-                proc_name = proc.name()
-                if proc_name != u"":
-                    logger.error(proc.name)
-                    #print (proc.cmdline())
-            except psutil.AccessDenied:
-                logger.error("Permission error or access denied on process")
-            # Collect all the open apps
-            open_apps.add(proc_name.split('.')[0])
-        # Get the open apps that are restricted in list
-        open_res_apps = list(self.RESTRICTED_APPS.intersection(open_apps))
-        len_open_res = len(open_res_apps)
-        if len_open_res != 0:
-            # Create a string containing name of all open apps
-            # Show maximum of 5 apps.
-            apparent_index = (len_open_res, 5)[len_open_res > 5] - 1
-            apps_string = ''.join(
-                open_res_apps[apparent_index])       
-            if len_open_res > 5:
-                apps_string += '...'
-            msg = QMessageBox()
-            msg.setIcon(QMessageBox.Warning)       
-            msg.setInformativeText("Kindly Close The Application")
-            msg.setWindowTitle("ERROR!!!")
-            msg.setWindowFlags(self.windowFlags() | Qt.WindowStaysOnTopHint) #added by RSR
-            #msg.setDetailedText("The details are as follows:")
-            msg.setStandardButtons(QMessageBox.Ok)            
-            msg.setText("Looks like  application {} is Open".format(apps_string.upper()))
-            msg.show()
-            msg.exec_()
-            return True
-    
 class AccessCode(QDialog):
     # Temporary
     accessCode=[]
     acCount=0
     eL=[]    
-    def __init__(self,options, parent=None):
+    def __init__(self, options, parent=None):
         super(AccessCode, self).__init__(parent)
-        self.uiAc=Ui_Dialog()
+        self.uiAc = Ui_Dialog()
         self.uiAc.setupUi(self)
-        self.options=options
+        self.options = options
         self.setWindowTitle(" ")
         logger.debug("value of OPTIONS in init {}".format(options))
-        #pdb.set_trace()        
-        #self.setWindowFlags(self.windowFlags() | Qt.WindowStaysOnTopHint) #added by RSR
-        #self.setWindowFlags(self.windowDeactivate) 
-        #very important remove x button of window
-        #self.setWindowFlags(self.windowFlags() & ~Qt.CustomizeWindowHint & Qt.WindowTitleHint) 
-        self.setWindowFlags(self.windowFlags() & ~Qt.WindowContextHelpButtonHint )
-        # enable custom window hint
+        self.setWindowFlags(self.windowFlags() & ~Qt.WindowContextHelpButtonHint)
         self.setWindowFlags(self.windowFlags() | QtCore.Qt.CustomizeWindowHint)
-
-        # disable (but not hide) close button
         self.setWindowFlags(self.windowFlags() & ~QtCore.Qt.WindowCloseButtonHint)
         self.setWindowFlags(self.windowFlags() | Qt.WindowStaysOnTopHint) #added by RSR
-        #self.setWindowFlags(self.windowFlags() | Qt.WindowCloseButtonHint)
-        #self.setWindowFlags(self.windowFlags())
-        self.resize(300,300)        
         self.uiAc.pushButtonSubmit.clicked.connect(self.submitAcode)
-        self.uiAc.lineEdit.textChanged.connect(self.getAccessCode)
-        #self.lineEdit.editingFinished.connect(self.getAccessCode)
-        #self.uiAc.pushButtonSubmit.clicked.connect(MainWindow.callMainWindow)           
+        self.uiAc.lineEdit.textChanged.connect(self.getAccessCode)           
         self.setModal(True)
         self.show()
-        #self.setUpParameter()
+
     def keyPressEvent(self,event):  
-        
         if event.key()+1 == Qt.Key_Enter:
             print("I came in submit ENTER")            
-            #self.submitAcode()
-            #self.emit(SIGNAL("self.pushButtonSubmit.clicked"),self.submitAcode)
-            pass
-    
+
     def moveEvent(self,event):
         event.ignore()
         self.move(550,220)
@@ -297,9 +216,8 @@ class AccessCode(QDialog):
             msg.show()
             msg.exec_()
         else: 
-            if AccessCode.acCount > 3:
-                exit()
-            AccessCode.acCount +=1
+            if AccessCode.acCount == 3:
+                exit()    
             print("value of Access Code is {}".format(self.accessCode) )
             para["access_token"]=self.accessCode[0]
             print("para is {}".format(para))
@@ -338,11 +256,13 @@ class AccessCode(QDialog):
                 msg.setWindowFlags(self.windowFlags() | Qt.WindowStaysOnTopHint)
                 msg.setStandardButtons(QMessageBox.Ok)            
                 error_message = jsonData['msg']
-                if AccessCode.acCount == 3:
-                    error_message = jsonData['msg'] + ' ' + constants.MAXIMUM_ATTEMPT_REACHED
+                if AccessCode.acCount == 2:
+                    error_message += (' ' + constants.MAXIMUM_ATTEMPT_REACHED)
                 msg.setText(error_message)
                 msg.show()
-                msg.exec_()              
+                msg.exec_()
+            # Increase the access count
+            AccessCode.acCount +=1
         
     def getAccessCode(self,text):
         # StartHere
@@ -356,10 +276,6 @@ class AccessCode(QDialog):
         print("value of Access Code is {}".format(AccessCode.accessCode) )
                   
     def parse_config(self, file_config, options):
-        #self.config = {}
-        #pdb.set_trace()
-        #print("value of file_config is: {}".format(file_config))
-        #print("value of options is: {}".format(options))
         options = vars(options)
         for key, metadata in CONFIG_OPTIONS.items():
             options_val = options.get(key)
@@ -401,7 +317,7 @@ class AccessCode(QDialog):
                 config[key] = metadata.get("type")(config[key])
         debug(repr(config))
         print("value of Config Dict in Parse Config is: {}".format(config))
-                
+
 
 class MainWindow(QMainWindow ):
 
@@ -1676,10 +1592,7 @@ if __name__ == "__main__":
         print("hello 16999")
         print(args.config_file)
         debug("No config file found or specified; using defaults.")
-    
-    # run the actual application 
-    #pdb.set_trace()
-    #accessCode=AccessCode(args)
+
        
     mainwin = MainWindow(args) #args is input parameter here
     #myWidget = MyWidget()

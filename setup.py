@@ -15,13 +15,13 @@ base = 'Win32GUI' if sys.platform=='win32' else None
 options = {
     'build_exe': {
         'includes': ['atexit'],
-		'include_files':['C:\Python34\Lib\site-packages\pyHook\_cpyHook.pyd']
+		'include_files':['C:\Python27\Lib\site-packages\pyHook\_cpyHook.pyd']
     }
 }
 
 build_exe_options = {
     'includes': ['atexit'],
-    'packages': ['PySide.QtXml','pyHook']
+    'packages': ['PySide.QtXml','pyHook', 'idna']
     }
 
 
@@ -31,7 +31,7 @@ setup(name='ProvLock',
       options = dict(build_exe = buildOptions),
       executables = [
     Executable('testForm.py',shortcutName="ProvLock",
-            shortcutDir="DesktopFolder")
+            shortcutDir="DesktopFolder",base=base, icon=".\\icons\\favicon.ico")
 ])
 '''
 import sys
